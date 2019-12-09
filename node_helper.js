@@ -9,7 +9,7 @@ const moment     = require('moment');
 module.exports = NodeHelper.create({
     isLoaded: false,
     config:   null,
-
+    players: [],
     /**
      * @param {String} notification
      * @param {*}      payload
@@ -31,7 +31,17 @@ module.exports = NodeHelper.create({
                 if (typeof payload.sound === 'undefined' || !payload.sound) {
                     this.log('Could not play sound, notification payload `sound` was not supplied');
                 } else {
-                    this.playFile(payload.sound, payload.delay);
+                    this.playFile(payload.sound, payload.delay, payload.pin);
+                }
+            }
+        } else if (notification === 'STOP_SOUND') {
+            if (typeof payload === 'string') {
+                this.stopFile(payload);
+            } else if (typeof payload === 'object') {
+                if (typeof payload.pin === 'undefined' || !payload.pin) {
+                    this.log('Could not stop sound, notification payload `pin` was not supplied');
+                } else {
+                    this.stopFile(payload.sound, payload.pin, payload.delay);
                 }
             }
         }
@@ -40,8 +50,9 @@ module.exports = NodeHelper.create({
     /**
      * @param {String}  filename
      * @param {Number} [delay]  in ms
+     * @param {*} pin to bind player to.
      */
-    playFile: function (filename, delay) {
+    playFile: function (filename, delay, pin) {
         // Only play if outside of quiet hours
         let play = true;
 
@@ -77,11 +88,33 @@ module.exports = NodeHelper.create({
             this.log('Playing ' + filename + ' with ' + delay + 'ms delay', true);
 
             setTimeout(() => {
-                new Player(path.normalize(__dirname + '/sounds/' + filename)).play();
+                if (pin) {
+                    players[pin] = new Player(path.normalize(__dirname + '/sounds/' + filename));
+                    players[pin].play();				
+                } else {
+                    new Player(path.normalize(__dirname + '/sounds/' + filename)).play();
+                }
             }, delay);
         } else {
             this.log('Not playing sound as quiet hours are in effect');
         }
+    },
+
+    /**
+     * @param {String}  filename
+     * @param {*} pin to be stopped
+     * @param {Number} [delay]  in ms
+     */
+    stopFile: function (filename, pin, delay) {
+        let soundfile = __dirname + '/sounds/' + filename;
+
+        this.log('Stopping ' + filename + ' with ' + delay + 'ms delay', true);
+
+        setTimeout(() => {
+            if (pin && players[pin]) {
+                players[pin].stop();
+            }
+        }, delay);
     },
 
     /**
