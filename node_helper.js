@@ -89,8 +89,8 @@ module.exports = NodeHelper.create({
 
             setTimeout(() => {
                 if (pin) {
-                    players[pin] = new Player(path.normalize(__dirname + '/sounds/' + filename));
-                    players[pin].play();				
+                    this.players[pin] = new Player(path.normalize(__dirname + '/sounds/' + filename));
+                    this.players[pin].play();				
                 } else {
                     new Player(path.normalize(__dirname + '/sounds/' + filename)).play();
                 }
@@ -111,8 +111,8 @@ module.exports = NodeHelper.create({
         this.log('Stopping ' + filename + ' with ' + delay + 'ms delay', true);
 
         setTimeout(() => {
-            if (pin && players[pin]) {
-                players[pin].stop();
+            if (pin && this.players[pin]) {
+                this.players[pin].stop();
             }
         }, delay);
     },
